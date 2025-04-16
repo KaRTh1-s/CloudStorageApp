@@ -16,6 +16,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.stream.Collectors;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -203,6 +204,20 @@ public class GoogleDriveService implements CloudStorageService {
         public String getId() { return id; }
         public void setId(String id) { this.id = id; }
     }
+    public List<String> listFiles(String accessToken) {
+    String url = "https://www.googleapis.com/drive/v3/files";
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + accessToken);
+
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+    ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+
+    List<Map<String, Object>> files = (List<Map<String, Object>>) response.getBody().get("files");
+    return files.stream()
+                .map(file -> (String) file.get("name"))
+                .collect(Collectors.toList());
+}
+
 
     private static class TokenResponse {
         private String accessToken;
