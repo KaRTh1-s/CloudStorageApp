@@ -16,7 +16,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-
+import java.util.stream.Collectors;
 import java.time.Instant;
 
 @Service
@@ -27,6 +27,21 @@ public class OneDriveService implements CloudStorageService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
+    public List<String> listFiles(String accessToken) {
+    String url = "https://graph.microsoft.com/v1.0/me/drive/root/children";
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + accessToken);
+
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+    ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.GET, entity, Map.class);
+
+    List<Map<String, Object>> files = (List<Map<String, Object>>) response.getBody().get("value");
+    return files.stream()
+                .map(file -> (String) file.get("name"))
+                .collect(Collectors.toList());
+}
+
+    
     @Override
     public CloudStorageToken connect(String authCode, String userId) throws Exception {
         CloudStorageToken token = exchangeAuthCode(authCode);
