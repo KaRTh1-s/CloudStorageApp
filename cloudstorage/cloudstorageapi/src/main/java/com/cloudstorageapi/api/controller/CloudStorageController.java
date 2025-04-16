@@ -32,6 +32,28 @@ public class CloudStorageController {
         return ResponseEntity.ok(token);
     }
 
+    @GetMapping("/files")
+    public ResponseEntity<List<String>> getAllFiles(
+        @RequestParam String userId,
+        @RequestParam String provider) {
+
+    CloudStorageToken token = tokenRepository.findByUserIdAndProvider(userId, provider);
+    if (token == null) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    List<String> files;
+    if (provider.equalsIgnoreCase("google")) {
+        files = googleDriveService.listFiles(token.getAccessToken());
+    } else if (provider.equalsIgnoreCase("onedrive")) {
+        files = oneDriveService.listFiles(token.getAccessToken());
+    } else {
+        return ResponseEntity.badRequest().build();
+    }
+
+    return ResponseEntity.ok(files);
+}
+
     @RequestMapping(value = "/onedrive/connect", method = RequestMethod.POST)
     public ResponseEntity<?> connectOneDrive(
             @RequestBody String authCode,
